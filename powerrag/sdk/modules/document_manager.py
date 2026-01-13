@@ -17,6 +17,7 @@
 from typing import Optional, List, Dict, Any, Union
 from pathlib import Path
 from .document import DocumentInfo
+import json
 
 
 class DocumentManager:
@@ -615,6 +616,45 @@ class DocumentManager:
         
         return res_json.get("data", {})
     
+    def _parse_to_md_with_binary(
+        self,
+        file_binary: bytes,
+        filename: str,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Internal helper method to parse file binary to Markdown
+        
+        Args:
+            file_binary: Binary content of the file
+            filename: Name of the file (must include correct extension)
+            config: Parse configuration (optional)
+        
+        Returns:
+            Parse result dictionary
+        
+        Raises:
+            Exception: API call failed
+        """
+        # Prepare files from binary data
+        files = [("file", (filename, file_binary))]
+        
+        # Prepare form data
+        form_data = {}
+        if config:
+            form_data["config"] = json.dumps(config)
+        
+        url = "/powerrag/parse_to_md/upload"
+        res = self.client.post(url, json=None, files=files, data=form_data)
+        
+        # Parse JSON response
+        res_json = res.json()
+        
+        if res_json.get("code") != 0:
+            raise Exception(res_json.get("message", "Parse to markdown failed"))
+        
+        return res_json.get("data", {})
+    
     def parse_to_md_upload(
         self,
         file_path: str,
@@ -660,26 +700,70 @@ class DocumentManager:
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_path}")
         
-        # Prepare files
+        # Read file and delegate to helper method
         with open(path, "rb") as f:
-            files = [("file", (path.name, f.read()))]
+            file_binary = f.read()
         
-        # Prepare form data
-        import json
-        form_data = {}
-        if config:
-            form_data["config"] = json.dumps(config)
+        return self._parse_to_md_with_binary(file_binary, path.name, config)
+    
+    def parse_to_md_binary(
+        self,
+        file_binary: bytes,
+        filename: str,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        直接使用文件二进制内容解析为Markdown（不切分）
         
-        url = "/powerrag/parse_to_md/upload"
-        res = self.client.post(url, json=None, files=files, data=form_data)
+        使用文件二进制数据解析为 Markdown 格式，不进行切分。
+        适用于文件已在内存中或从其他来源获取的场景。
         
-        # Parse JSON response
-        res_json = res.json()
+        支持的文件格式:
+        - PDF (.pdf)
+        - Office 文档 (.doc, .docx, .ppt, .pptx)
+        - 图片 (.jpg, .png)
+        - HTML (.html, .htm)
         
-        if res_json.get("code") != 0:
-            raise Exception(res_json.get("message", "Parse to markdown (upload) failed"))
+        Args:
+            file_binary: 文件的二进制内容
+            filename: 文件名（必须包含正确的扩展名）
+            config: 解析配置（可选），同 parse_to_md
+                - layout_recognize: 布局识别引擎 (mineru 或 dots_ocr，默认 mineru)
+                - enable_formula: 是否识别公式 (默认 False)
+                - enable_table: 是否识别表格 (默认 True)
+                - from_page: 起始页（仅 PDF，默认 0）
+                - to_page: 结束页（仅 PDF，默认 100000）
         
-        return res_json.get("data", {})
+        Returns:
+            解析结果字典，包含以下字段：
+            - filename: 文件名
+            - markdown: Markdown 内容
+            - markdown_length: Markdown 长度
+            - images: 图片字典 (base64)
+            - total_images: 图片总数
+        
+        Raises:
+            ValueError: 文件名或二进制数据无效
+            Exception: API调用失败
+        
+        Example:
+            >>> with open("document.pdf", "rb") as f:
+            ...     file_binary = f.read()
+            >>> result = doc_manager.parse_to_md_binary(
+            ...     file_binary=file_binary,
+            ...     filename="document.pdf",
+            ...     config={"layout_recognize": "mineru", "enable_ocr": True}
+            ... )
+            >>> print(result['markdown'])
+            >>> print(f"Parsed {result['total_images']} images")
+        """
+        if not file_binary:
+            raise ValueError("file_binary cannot be empty")
+        if not filename:
+            raise ValueError("filename cannot be empty")
+        
+        # Delegate to helper method
+        return self._parse_to_md_with_binary(file_binary, filename, config)
     
     def parse_url(
         self,
