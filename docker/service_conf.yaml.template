@@ -31,7 +31,7 @@ infinity:
   uri: '${INFINITY_HOST:-infinity}:23817'
   db_name: 'default_db'
 oceanbase:
-  scheme: 'oceanbase' # set 'mysql' to create connection using mysql config
+  scheme: 'mysql' # set 'mysql' to create connection using mysql config
   config:
     db_name: '${OCEANBASE_DOC_DBNAME:-test}'
     user: '${OCEANBASE_USER:-root@ragflow}'
