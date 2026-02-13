@@ -150,7 +150,7 @@ bash set_backend_deps.sh
 | BAAI/bge-large-zh-v1.5 | `~/.ragflow/` | 中文向量嵌入 |
 | BCE Embedding | `~/.ragflow/` | 向量嵌入 |
 | NLTK 数据 | `nltk_data/` | 自然语言处理 |
-| Tika Server | `tika-server-standard-3.0.0.jar` | 文档解析 |
+| Tika Server | `tika-server-standard-3.2.3.jar` | 文档解析 |
 | tiktoken 编码 | `9b5ad71b2ce5302211f9c61530b329a4922fc6a4` | Token 计算 |
 
 ### 3.3 启动后端服务

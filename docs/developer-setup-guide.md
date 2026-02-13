@@ -148,7 +148,7 @@ This script copies the following resources from the `infiniflow/ragflow_deps:lat
 | BAAI/bge-large-zh-v1.5 | `~/.ragflow/` | Chinese vector embeddings |
 | BCE Embedding | `~/.ragflow/` | Vector embeddings |
 | NLTK Data | `nltk_data/` | Natural language processing |
-| Tika Server | `tika-server-standard-3.0.0.jar` | Document parsing |
+| Tika Server | `tika-server-standard-3.2.3.jar` | Document parsing |
 | tiktoken Encoding | `9b5ad71b2ce5302211f9c61530b329a4922fc6a4` | Token calculation |
 
 ### 3.3 Start Backend Services
